@@ -34,7 +34,7 @@ def get_temperature_and_city(ip_address):
     
     return city_name, temperature
 
-@app.route('/api/hello', methods=['GET'])
+@app.route('/', methods=['GET'])
 def hello():
     visitor_name = request.args.get('visitor_name', 'Visitor')
     client_ip = get_client_ip()
