@@ -1,16 +1,7 @@
 from flask import Flask, request, jsonify
-import requests
-import os
+import requests, os
 
 app = Flask(__name__)
-
-# def get_location_info(ip_address):
-#     # Use a service like ipinfo.io to get location info
-#     response = requests.get(f"https://ipinfo.io/{ip_address}/json")
-#     data = response.json()
-#     print(f"ip_info_data: {data}")
-#     city = data.get("city", "Unknown")
-#     return city
 
 def get_client_ip():
     if request.headers.get('X-Forwarded-For'):
@@ -19,29 +10,42 @@ def get_client_ip():
         ip = request.remote_addr
     return ip
 
-def get_temperature(city):
-    # Use a weather API to get the temperature. For example, OpenWeatherMap.
+def get_location_info(ip_address):
+    response = requests.get(f"https://ipinfo.io/{ip_address}/json")
+    data = response.json()
+    return data
+
+def get_temperature_and_city(ip_address):
+    location_data = get_location_info(ip_address)
+    
+    city = location_data.get("city", "Unknown")
+    if city == "Unknown":
+        return city, 0  # Default temperature if city is not found
+
     api_key = os.environ["api_key"]
     response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric")
-    data = response.json()
-    print(f"Temperature data: {data}")
-    temperature = data['main']['temp']
-    return temperature
+    weather_data = response.json()
 
-@app.route('/', methods=['GET'])
-@app.route('/hello', methods=['GET'])
+    if weather_data['cod'] != 200:
+        return "Unknown", 0
+
+    temperature = weather_data['main']['temp']
+    city_name = weather_data.get('name', 'Unknown')
+    
+    return city_name, temperature
+
+@app.route('/api/hello', methods=['GET'])
 def hello():
     visitor_name = request.args.get('visitor_name', 'Visitor')
-    client_ip = request.remote_addr
-    print(f"client IP: {client_ip}")
-    location = get_location_info(client_ip)
-    temperature = get_temperature(location)
+    client_ip = get_client_ip()
 
-    greeting = f"Hello, {visitor_name}!, the temperature is {temperature} degrees Celsius in {location}"
+    city, temperature = get_temperature_and_city(client_ip)
+    
+    greeting = f"Hello, {visitor_name}!, the temperature is {temperature} degrees Celsius in {city}"
 
     response = {
         "client_ip": client_ip,
-        "location": location,
+        "location": city,
         "greeting": greeting
     }
 
