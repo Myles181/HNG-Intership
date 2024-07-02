@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
+import os
 
 app = Flask(__name__)
 
@@ -13,7 +14,7 @@ def get_location_info(ip_address):
 
 def get_temperature(city):
     # Use a weather API to get the temperature. For example, OpenWeatherMap.
-    api_key = '3e599fc096b9590cac79d873e3ad3c34'
+    api_key = os.environ["api_key"]
     response = requests.get(f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric")
     data = response.json()
     print(f"Temperature data: {data}")
