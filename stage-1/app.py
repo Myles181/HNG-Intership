@@ -4,13 +4,20 @@ import os
 
 app = Flask(__name__)
 
-def get_location_info(ip_address):
-    # Use a service like ipinfo.io to get location info
-    response = requests.get(f"https://ipinfo.io/{ip_address}/json")
-    data = response.json()
-    print(f"ip_info_data: {data}")
-    city = data.get("city", "Unknown")
-    return city
+# def get_location_info(ip_address):
+#     # Use a service like ipinfo.io to get location info
+#     response = requests.get(f"https://ipinfo.io/{ip_address}/json")
+#     data = response.json()
+#     print(f"ip_info_data: {data}")
+#     city = data.get("city", "Unknown")
+#     return city
+
+def get_client_ip():
+    if request.headers.get('X-Forwarded-For'):
+        ip = request.headers['X-Forwarded-For'].split(',')[0]
+    else:
+        ip = request.remote_addr
+    return ip
 
 def get_temperature(city):
     # Use a weather API to get the temperature. For example, OpenWeatherMap.
