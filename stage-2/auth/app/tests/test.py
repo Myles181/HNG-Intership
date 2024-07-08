@@ -1,5 +1,4 @@
 import unittest
-from flask import request
 import requests
 from django.urls import reverse
 from rest_framework import status, generics, permissions
@@ -41,19 +40,29 @@ class MyAuth(unittest.TestCase):
         # Login as new user
         response = requests.post(self.login_url, data={"email": self.payload['email'], "password": self.payload['password']})
         response_data = response.json()
+        # print(f"response_data: {response_data}")
         # Assert the response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         access_token = response_data['data']['accessToken']
+        # print(access_token)
         
         # Access a protected route
         userId = response_data['data']['user']['userId']
-        print(f"userId: {userId}")
+        # print(f"userId: {userId}")
         getuser_url = f'https://hng-intership.onrender.com/users/{userId}'
 
         user_response = requests.get(getuser_url, headers={"Content-Type": "application/json", "Authorization": f"Bearer {access_token}"})
         self.assertEqual(user_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(user_response.json().status, "success")
-        print(user_response.json())
+        self.assertEqual(user_response.json()['status'], "success")
+        # print(user_response.json())
+
+    def test_register_incomplete_data(self):
+        incomplete_data = self.payload
+        # Remove firstName field
+        incomplete_data.pop("firstName")
+        response = requests.post(self.register_url, data=incomplete_data)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        print(response.json()['errors'])
 
 
 if __name__ == "__main__":

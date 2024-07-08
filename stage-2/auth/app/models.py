@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 import uuid
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, firstName, lastName, password=None, phone=None):
+    def create_user(self, userId, email, firstName, lastName, password=None, phone=None):
         if not email:
             raise ValueError('Users must have an email address')
         if not firstName:
@@ -15,17 +15,20 @@ class UserManager(BaseUserManager):
         
         email = self.normalize_email(email)
         user = self.model(
+            userId=userId,
             email=email,
             firstName=firstName,
             lastName=lastName,
             phone=phone,
         )
+        user.is_active = True
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, firstName, lastName, password=None, phone=None):
+    def create_superuser(self, userId, email, firstName, lastName, password=None, phone=None):
         user = self.create_user(
+            userId=userId,
             email=email,
             firstName=firstName,
             lastName=lastName,
@@ -37,7 +40,7 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-    userId = models.CharField(max_length=10, editable=False, unique=True)
+    userId = models.CharField(max_length=10, unique=True)
     firstName = models.CharField(max_length=30, null=False)
     lastName = models.CharField(max_length=30, null=False)
     email = models.EmailField(unique=True, null=False)
@@ -60,7 +63,7 @@ class User(AbstractBaseUser):
         return self.is_admin
 
 class Organisation(models.Model):
-    orgId = models.CharField(max_length=10, editable=False, unique=True)
+    orgId = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=True, blank=True)
     users = models.ManyToManyField(User, related_name='organisations')

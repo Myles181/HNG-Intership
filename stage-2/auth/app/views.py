@@ -1,3 +1,4 @@
+from urllib import response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,13 +14,14 @@ def register_view(request):
     if request.method == 'POST':
         data = request.data.copy()
         data['userId'] = str(random.randint(1000, 9999))
+        print(data)
 
         serializer = UserRegisterSerializer(data=data)
+        print(serializer.is_valid())
 
         if serializer.is_valid():
             try:
                 user = serializer.save()
-                serializer.data['userId']
                 organisation = Organisation.objects.create(orgId=serializer.data['userId'], name=f"{serializer.data['firstName']}'s Organisation")
                 organisation.users.add(user)
                 token = RefreshToken.for_user(user)
@@ -35,6 +37,7 @@ def register_view(request):
                 }
                 return Response(response_data, status=status.HTTP_201_CREATED)
             except Exception as e:
+                print(f"response: {e}")
                 response = {
                     "status": "Bad request",
                     "message": f"Registration unsuccessful: {str(e)}",
@@ -67,6 +70,7 @@ def login_view(request):
                 "user": UserSerializer(user).data
             }
         }
+        # print(response_data)
         return Response(response_data, status=status.HTTP_200_OK)
     else:
         data = {
